@@ -1,37 +1,56 @@
-import React from "react"
+import { React, useEffect, useState } from "react"
 import classes from "./AvailableMeals.module.css"
 import MealItem from "./MealItem/MealItem"
 import Card from "../UI/Card"
+import Loader from "../UI/Loader"
 
-const DUMMY_MEALS = [
-  {
-    id: "m1",
-    name: "Sushi",
-    description: "Finest fish and veggies",
-    price: 22.99,
-  },
-  {
-    id: "m2",
-    name: "Schnitzel",
-    description: "A german specialty!",
-    price: 16.5,
-  },
-  {
-    id: "m3",
-    name: "Barbecue Burger",
-    description: "American, raw, meaty",
-    price: 12.99,
-  },
-  {
-    id: "m4",
-    name: "Green Bowl",
-    description: "Healthy...and green...",
-    price: 18.99,
-  },
-]
+const mealsURL =
+  "https://react-http-svr-default-rtdb.asia-southeast1.firebasedatabase.app/recipes.json"
 
 const AvailableMeals = () => {
-  const mealsList = DUMMY_MEALS.map((meal) => (
+  const [meals, setMeals] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [httpError, setHttpError] = useState()
+
+  const fetchMeals = async () => {
+    const response = await fetch(mealsURL)
+
+    if (!response.ok) {
+      throw new Error("Something when wrong! :/")
+    }
+
+    const data = await response.json()
+    const loadedMeals = []
+
+    for (const key in data) {
+      loadedMeals.push({
+        id: key,
+        name: data[key].name,
+        description: data[key].description,
+        price: data[key].price,
+      })
+    }
+
+    setMeals(loadedMeals)
+    setIsLoading(false)
+  }
+
+  useEffect(() => {
+    fetchMeals().catch((error) => {
+      setIsLoading(false)
+      setHttpError(error.message)
+    })
+  }, [])
+
+  if (httpError) {
+    return (
+      <section>
+        <p className={classes["error-message"]}>{httpError}</p>
+      </section>
+    )
+  }
+
+  const mealsList = meals.map((meal) => (
     <MealItem
       id={meal.id}
       key={meal.id}
@@ -40,6 +59,10 @@ const AvailableMeals = () => {
       price={meal.price}
     />
   ))
+
+  if (isLoading) {
+    return <Loader />
+  }
 
   return (
     <section className={classes.meals}>

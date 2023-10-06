@@ -1,0 +1,38 @@
+.loader-wrap {
+}
+
+.loader {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: auto;
+    max-width: 45rem;
+    margin: 30px auto;
+    background-color: #fff;
+    border-radius: 15px;
+}
+
+.loader p{
+    font-size: 26px;
+    font-weight: 600;
+    margin-block: 20px;
+}
+
+.loader div {
+    width: 30px;
+    height: 30px;
+    border: 5px solid #333;
+    border-bottom-color: transparent;
+    border-radius: 50%;
+    animation: loading infinite 3s linear;
+}
+
+@keyframes loading {
+    from {
+        rotate: 0deg;
+    }
+    to {
+        rotate: 360deg;
+    }
+}
