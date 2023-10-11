@@ -1,4 +1,3 @@
-import Card from "./Card"
 import classes from "./Loader.module.css"
 
 const Loader = () => {

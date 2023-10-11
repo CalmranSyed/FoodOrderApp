@@ -1,9 +1,11 @@
-import React, { useContext, useState } from "react"
+import React, { Fragment, useContext, useState } from "react"
 import Modal from "../UI/Modal"
 import classes from "./Cart.module.css"
 import CartContext from "../../Store/cart-context"
 import CartItem from "./CartItem"
 import Checkout from "./Checkout"
+
+const usersUrl = "https://react-http-svr-default-rtdb.asia-southeast1.firebasedatabase.app/userdata.json"
 
 const Cart = (props) => {
   const cartCtx = useContext(CartContext)
@@ -15,10 +17,36 @@ const Cart = (props) => {
   }
   const removeCartItemHandler = (id) => {
     cartCtx.removeItem(id)
+
+    if (cartCtx.items.length === 0) {
+      setIsCheckout(false)
+    }
   }
 
   const orderHandler = () => {
     setIsCheckout(true)
+  }
+
+  const confirmHandler = async (userData) => {
+    try {
+      const response = await fetch(
+        usersUrl,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            user: userData,
+            orderedMeals: cartCtx.items,
+          }),
+        }
+      )
+
+      if (!response.ok) {
+        throw new Error("Something went wrong :(")
+      }
+
+    } catch (error) {
+      console.error(error)
+    }
   }
 
   const cartItems = (
@@ -38,6 +66,11 @@ const Cart = (props) => {
 
   const cartActions = (
     <div className={classes.actions}>
+      {cartCtx.items.length === 0 && (
+        <p className={classes["empty-message"]}>
+          Your cart seems empty , please add some delicious meals! :D
+        </p>
+      )}
       <button className={classes["button--alt"]} onClick={props.onHideCart}>
         Close
       </button>
@@ -49,14 +82,28 @@ const Cart = (props) => {
     </div>
   )
 
-  return (
-    <Modal onBackdropClick={props.onHideCart}>
+  const modalContent = (
+    <Fragment>
       {cartItems}
       <div className={classes.total}>
         <span>Total Amount</span>
         <span>{cartTotal}</span>
       </div>
-      {isCheckout ? <Checkout active={isCheckout} onCancel={props.onHideCart}/> : cartActions}
+      {isCheckout ? (
+        <Checkout
+          onConfirm={confirmHandler}
+          active={isCheckout}
+          onCancel={props.onHideCart}
+        />
+      ) : (
+        cartActions
+      )}
+    </Fragment>
+  )
+
+  return (
+    <Modal onBackdropClick={props.onHideCart}>
+      {modalContent}
     </Modal>
   )
 }
