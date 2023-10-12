@@ -4,13 +4,18 @@ import classes from "./Cart.module.css"
 import CartContext from "../../Store/cart-context"
 import CartItem from "./CartItem"
 import Checkout from "./Checkout"
+import Loader from "../UI/Loader"
 
-const usersUrl = "https://react-http-svr-default-rtdb.asia-southeast1.firebasedatabase.app/userdata.json"
+const usersUrl =
+  "https://react-http-svr-default-rtdb.asia-southeast1.firebasedatabase.app/userdata.json"
 
 const Cart = (props) => {
   const cartCtx = useContext(CartContext)
   const cartTotal = `$${cartCtx.totalAmount.toFixed(2)}`
   const [isCheckout, setIsCheckout] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [httpError, setHttpError] = useState(null)
+  const [checkedOut, setCheckedOut] = useState(false)
 
   const addCartItemHandler = (item) => {
     cartCtx.addItem({ ...item, amount: 1 })
@@ -28,23 +33,30 @@ const Cart = (props) => {
   }
 
   const confirmHandler = async (userData) => {
+    setIsLoading(true)
+
     try {
-      const response = await fetch(
-        usersUrl,
-        {
-          method: "POST",
-          body: JSON.stringify({
-            user: userData,
-            orderedMeals: cartCtx.items,
-          }),
-        }
-      )
+      const response = await fetch(usersUrl, {
+        method: "POST",
+        body: JSON.stringify({
+          user: userData,
+          orderedMeals: cartCtx.items,
+        }),
+      })
 
       if (!response.ok) {
         throw new Error("Something went wrong :(")
       }
+      
+      cartCtx.clearCart()
+      setIsCheckout(false)
+      setCheckedOut(true)
+      setIsLoading(false)
 
     } catch (error) {
+      setCheckedOut(true)
+      setHttpError(error.message)
+      setIsLoading(false)
       console.error(error)
     }
   }
@@ -101,9 +113,36 @@ const Cart = (props) => {
     </Fragment>
   )
 
+  const successModalContent = (
+    <Fragment>
+      <p className={classes["success-message"]}>
+        Thanks for ordering, our tasty meals will reach you shortly! :D
+      </p>
+      <div className={classes.actions}>
+        <button className={classes["button"]} onClick={props.onHideCart}>
+          Close
+        </button>
+      </div>
+    </Fragment>
+  )
+
+  const errorModalContent = (
+    <Fragment>
+      <p className={classes["error-message"]}>{httpError}</p>
+      <div className={classes.actions}>
+        <button className={classes["button"]} onClick={props.onHideCart}>
+          Close
+        </button>
+      </div>
+    </Fragment>
+  )
+
   return (
     <Modal onBackdropClick={props.onHideCart}>
-      {modalContent}
+      {isLoading && <Loader />}
+      {!checkedOut && !isLoading && modalContent}
+      {checkedOut && httpError && errorModalContent}
+      {checkedOut && !httpError && successModalContent}
     </Modal>
   )
 }

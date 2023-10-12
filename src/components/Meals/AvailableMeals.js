@@ -38,7 +38,7 @@ const AvailableMeals = () => {
   useEffect(() => {
     fetchMeals().catch((error) => {
       setIsLoading(false)
-      setHttpError(error.message)
+      setHttpError(error)
     })
   }, [])
 

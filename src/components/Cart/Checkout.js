@@ -64,7 +64,7 @@ const Checkout = (props) => {
     }
 
     // submit form data
-    // props.onConfirm(userData)
+    props.onConfirm(userData)
   };
 
   const nameCSSClasses = name ? `${classes.control}` : `${classes.control} ${classes.invalid}`
