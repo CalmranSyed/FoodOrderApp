@@ -4,9 +4,7 @@ import classes from './Checkout.module.css';
 
 const isEmpty = value => value.trim() === ""
 const hasValidCount = (value,count) => {return value.trim().length === count}
-const clearField = (field) => {
-  field.current.value = ""
-}
+
 
 const Checkout = (props) => {
   const [fieldValidity,setFieldValidaty] = useState({
@@ -16,6 +14,8 @@ const Checkout = (props) => {
     postal: true,
     city: true,
   })
+
+  const storedUserData = props.storedUserData
   
   const nameRef = useRef()
   const mobileRef = useRef()
@@ -49,7 +49,6 @@ const Checkout = (props) => {
     })
 
     const formIsValid = nameIsValid && mobileIsValid && postalIsValid && streetIsValid && cityIsValid
-    console.log(fieldValidity)
 
     if(!formIsValid) {
       return
@@ -73,21 +72,23 @@ const Checkout = (props) => {
   const postalCSSClasses = postal ? `${classes.control}` : `${classes.control} ${classes.invalid}`
   const cityCSSClasses = city ? `${classes.control}` : `${classes.control} ${classes.invalid}`
 
+  
+
   return (
     <form className={classes.form} onSubmit={confirmHandler}>
-      <Input className={nameCSSClasses} ref={nameRef} label='Your Name' input={{id:'name', type:'text'}}/>
+      <Input className={nameCSSClasses} ref={nameRef} label='Your Name' input={{id:'name', type:'text', defaultValue: storedUserData && storedUserData.name}}/>
       {!name && <p>Please enter a valid name</p>}
 
-      <Input className={mobileCSSClasses} ref={mobileRef} label='Mobile No.' input={{id:'mobile', type:'number', min: '1'}}/>
+      <Input className={mobileCSSClasses} ref={mobileRef} label='Mobile No.' input={{id:'mobile', type:'number', min: '1', defaultValue: storedUserData && storedUserData.mobile}}/>
       {!mobile && <p>Please enter a valid mobile no.</p>}
       
-      <Input className={streetCSSClasses} ref={streetRef} label='Street name' input={{id:'street', type:'text'}}/>
+      <Input className={streetCSSClasses} ref={streetRef} label='Street name' input={{id:'street', type:'text', defaultValue: storedUserData && storedUserData.street}}/>
       {!street && <p>Please enter street name.</p>}
       
-      <Input className={postalCSSClasses} ref={postalRef} label='Postal code' input={{id:'postal', type:'text', min: '1'}}/>
+      <Input className={postalCSSClasses} ref={postalRef} label='Postal code' input={{id:'postal', type:'text', min: '1', defaultValue: storedUserData && storedUserData.postal}}/>
       {!postal && <p>Please enter a valid postal code.</p>}
       
-      <Input className={cityCSSClasses} ref={cityRef} label='City name' input={{id:'city', type:'text'}}/>
+      <Input className={cityCSSClasses} ref={cityRef} label='City name' input={{id:'city', type:'text', defaultValue: storedUserData && storedUserData.city}}/>
       {!city && <p>Please enter a valid city name.</p>}
       
       <div className={classes.actions}>

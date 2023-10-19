@@ -1,9 +1,11 @@
-import React, { useEffect, useRef, useState } from "react"
+import React, { useContext, useEffect, useRef, useState } from "react"
 import classes from "./MealItemForm.module.css"
 import Input from "../../UI/Input"
+import CartContext from "../../../Store/cart-context"
 
 const MealItemForm = (props) => {
   const [amountIsValid, setAmountIsValid] = useState(true)
+  const cart = useContext(CartContext)
   
   const amountInputRef = useRef()
   
@@ -36,7 +38,7 @@ const MealItemForm = (props) => {
         }}
       />
       {!amountIsValid && <p>Please enter a valid amount (1-5)</p>}
-      <button>+ Add</button>
+      <button type="submit">+ Add</button>
     </form>
   )
 }

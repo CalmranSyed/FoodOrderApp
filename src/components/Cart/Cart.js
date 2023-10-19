@@ -1,4 +1,4 @@
-import React, { Fragment, useContext, useState } from "react"
+import React, { Fragment, useContext, useEffect, useState } from "react"
 import Modal from "../UI/Modal"
 import classes from "./Cart.module.css"
 import CartContext from "../../Store/cart-context"
@@ -12,24 +12,35 @@ const usersUrl =
 const Cart = (props) => {
   const cartCtx = useContext(CartContext)
   const cartTotal = `$${cartCtx.totalAmount.toFixed(2)}`
-  const [isCheckout, setIsCheckout] = useState(false)
+  const [isCheckoutEnabled, setIsCheckoutEnabled] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [httpError, setHttpError] = useState(null)
-  const [checkedOut, setCheckedOut] = useState(false)
+  const [hasCheckedOut, setHasCheckedOut] = useState(false)
+  const usersLocalDBKey = "USER_INFO"
+  const cartLocalDBKey = "CART_ITEMS"
+  const [storedUserData, setStoredUserData] = useState(null)
+
+
+  useEffect(()=>{
+    if(localStorage[usersLocalDBKey]) {
+      setStoredUserData(JSON.parse(localStorage[usersLocalDBKey]))
+    }
+  },[])
 
   const addCartItemHandler = (item) => {
     cartCtx.addItem({ ...item, amount: 1 })
   }
+
   const removeCartItemHandler = (id) => {
     cartCtx.removeItem(id)
 
     if (cartCtx.items.length === 0) {
-      setIsCheckout(false)
+      setIsCheckoutEnabled(false)
     }
   }
 
   const orderHandler = () => {
-    setIsCheckout(true)
+    setIsCheckoutEnabled(true)
   }
 
   const confirmHandler = async (userData) => {
@@ -45,22 +56,27 @@ const Cart = (props) => {
       })
 
       if (!response.ok) {
+        localStorage.setItem("USER_INFO", JSON.stringify(userData))
+        console.log(localStorage[usersLocalDBKey])
+        // setStoredUserData(localStorage[localStorageKey])
         throw new Error("Something went wrong :(")
       }
       
+      localStorage.removeItem(usersLocalDBKey)
       cartCtx.clearCart()
-      setIsCheckout(false)
-      setCheckedOut(true)
+      setIsCheckoutEnabled(false)
+      setHasCheckedOut(true)
       setIsLoading(false)
-
+      
     } catch (error) {
-      setCheckedOut(true)
+      setHasCheckedOut(true)
       setHttpError(error.message)
       setIsLoading(false)
       console.error(error)
     }
   }
 
+  // JSX for rendering cart items
   const cartItems = (
     <ul className={classes["cart-items"]}>
       {cartCtx.items.map((item) => (
@@ -97,14 +113,17 @@ const Cart = (props) => {
   const modalContent = (
     <Fragment>
       {cartItems}
-      <div className={classes.total}>
-        <span>Total Amount</span>
-        <span>{cartTotal}</span>
-      </div>
-      {isCheckout ? (
+      {cartCtx.items.length > 0 && (
+        <div className={classes.total}>
+          <span>Total Amount</span>
+          <span>{cartTotal}</span>
+        </div>
+      )}
+      {isCheckoutEnabled ? (
         <Checkout
+          storedUserData={storedUserData}
           onConfirm={confirmHandler}
-          active={isCheckout}
+          active={isCheckoutEnabled}
           onCancel={props.onHideCart}
         />
       ) : (
@@ -140,9 +159,9 @@ const Cart = (props) => {
   return (
     <Modal onBackdropClick={props.onHideCart}>
       {isLoading && <Loader />}
-      {!checkedOut && !isLoading && modalContent}
-      {checkedOut && httpError && errorModalContent}
-      {checkedOut && !httpError && successModalContent}
+      {!hasCheckedOut && !isLoading && modalContent}
+      {hasCheckedOut && httpError && errorModalContent}
+      {hasCheckedOut && !httpError && successModalContent}
     </Modal>
   )
 }

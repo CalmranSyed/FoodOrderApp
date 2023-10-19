@@ -1,10 +1,20 @@
 import { useReducer } from "react"
 import CartContext from "./cart-context"
 
+const cartItems =  localStorage.getItem('CART_ITEMS') ? JSON.parse(localStorage.getItem('CART_ITEMS')) : []
+const cartAmount = cartItems.reduce((acc,item)=>{
+  return acc + item.price * item.amount
+},0)  
+
 const defaultCartState = {
-  items: [],
-  totalAmount: 0,
+  items: cartItems,
+  totalAmount: cartAmount
 }
+
+const cartLocalDBKey = 'CART_ITEMS'
+
+// persist default cart items in local storage
+localStorage.setItem(cartLocalDBKey,JSON.stringify(defaultCartState.items))
 
 const cartReducer = (state, action) => {
   if (action.type === "ADD") {
@@ -28,10 +38,13 @@ const cartReducer = (state, action) => {
       updatedItems = state.items.concat(action.item)
     }
 
+    localStorage.setItem(cartLocalDBKey,JSON.stringify(updatedItems))
+    
     return {
       items: updatedItems,
       totalAmount: updatedTotalAmount,
     }
+    
   }
 
   if (action.type==="REMOVE") {
@@ -55,6 +68,8 @@ const cartReducer = (state, action) => {
       updatedItems[existingCartItemIndex] = updatedItem
     }
 
+    localStorage.setItem(cartLocalDBKey,JSON.stringify(updatedItems))
+
     return {
       items: updatedItems,
       totalAmount: updatedTotalAmount
@@ -62,6 +77,7 @@ const cartReducer = (state, action) => {
   }
 
   if(action.type === "CLEAR") {
+    localStorage.removeItem(cartLocalDBKey)
     return defaultCartState
   }
 
